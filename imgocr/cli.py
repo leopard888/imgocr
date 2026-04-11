@@ -4,27 +4,30 @@
 @description: Cli for image ocr.
 """
 import argparse
+import csv
+import os
 import sys
 
-import pandas as pd
-from loguru import logger
 from glob import glob
+from loguru import logger
 from tqdm import tqdm
-import os
 
 sys.path.append('..')
 from imgocr.ppocr_onnx import ImgOcr, draw_ocr_boxes
 
 
-def save_partial_results(df, output_file, is_first_chunk):
+def save_partial_results(rows, output_file, is_first_chunk):
+    """Save rows (list of [image, ocr_result]) to CSV file."""
     mode = 'w' if is_first_chunk else 'a'
-    header = is_first_chunk
     file_dir = os.path.dirname(output_file)
-    if not os.path.exists(file_dir):
+    if file_dir and not os.path.exists(file_dir):
         os.makedirs(file_dir)
 
-    with open(output_file, mode, encoding='utf-8') as f:
-        df.to_csv(f, index=False, header=header)
+    with open(output_file, mode, encoding='utf-8', newline='') as f:
+        writer = csv.writer(f)
+        if is_first_chunk:
+            writer.writerow(['images', 'ocr_results'])
+        writer.writerows(rows)
 
 
 def parse_args():
@@ -63,10 +66,10 @@ def cli(args):
             except Exception as e:
                 logger.error(f'error: {e}, img: {path}')
                 ocr_results.append("")
-        # Save part result to dataframe
-        chunk_df = pd.DataFrame({'images': chunk_imgs, 'ocr_results': ocr_results})
+        # Save partial results to CSV
+        rows = list(zip(chunk_imgs, ocr_results))
         output_file = os.path.join(args.output_dir, 'ocr_results.csv')
-        save_partial_results(chunk_df, output_file, i == 0)
+        save_partial_results(rows, output_file, i == 0)
         logger.debug(f'saved partial results. size: {len(chunk_imgs)}, ocr_results size: {len(ocr_results)}')
     logger.info(f"Input image_dir {args.image_dir}, saved to {args.output_dir} success.")
 

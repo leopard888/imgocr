@@ -5,13 +5,15 @@
 """
 import time
 import sys
+import os
 
-sys.path.append('..')
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from imgocr import ImgOcr
 
 if __name__ == "__main__":
     m = ImgOcr(use_gpu=False, model_version='v5', is_efficiency_mode=True)
-    img_path = "data/hard1.jpg"
+    img_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/hard1.jpg")
     s = time.time()
     result = m.ocr(img_path)
     e = time.time()

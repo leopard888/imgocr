@@ -31,17 +31,17 @@ def load_image(img: Union[str, Image.Image, MatLike, Path, bytes]) -> np.ndarray
     if isinstance(img, (str, Path)):
         img_path = str(img)
         if not Path(img_path).exists():
-            raise Exception(f"The image file is not found: {img_path}")
+            raise FileNotFoundError(f"The image file is not found: {img_path}")
         try:
             img = Image.open(img_path)
         except UnidentifiedImageError as e:
-            raise Exception(f"Cannot identify image file {img_path}") from e
+            raise ValueError(f"Cannot identify image file {img_path}") from e
         img = img_to_ndarray(img)
     elif isinstance(img, bytes):
         try:
             img = Image.open(BytesIO(img))
         except UnidentifiedImageError as e:
-            raise Exception("Cannot identify image from bytes") from e
+            raise ValueError("Cannot identify image from bytes") from e
         img = img_to_ndarray(img)
     elif isinstance(img, Image.Image):
         img = img_to_ndarray(img)
